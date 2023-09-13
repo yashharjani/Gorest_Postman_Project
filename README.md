@@ -1,5 +1,5 @@
 # Gorest_Postman_Project
-This is a API testing project. 
+This is an API testing project. 
 
 Link: https://gorest.co.in/
 
