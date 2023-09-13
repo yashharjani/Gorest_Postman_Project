@@ -1,0 +1,392 @@
+{
+	"info": {
+		"_postman_id": "2b8b9c71-6a40-4b16-a374-37a1e8ede066",
+		"name": "Gorest API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29581895"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Post Request Script",
+							"pm.test(\"Extract and save ID\", function () {",
+							"    var responseJson = pm.response.json(); // Assuming the response is in JSON format",
+							"    var uniqueId = responseJson.id; // Replace 'id' with the actual key in your response",
+							"",
+							"    // Set the extracted ID as an environment variable",
+							"    pm.globals.set(\"postId\", uniqueId);",
+							"});",
+							"",
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Verify email id value\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.email).to.eql(pm.environment.get(\"emailAddress\"));",
+							"});",
+							"",
+							"pm.test(\"Email is in a valid format\", function () {",
+							"    const responseData = pm.response.json();",
+							"    pm.expect(responseData).to.be.an('object');",
+							"    pm.expect(responseData.email).to.match(/^[\\w-]+(\\.[\\w-]+)*@([\\w-]+\\.)+[a-zA-Z]{2,7}$/);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Verify that the id is a non-negative integer\", function () {",
+							"    const responseData = pm.response.json();",
+							"",
+							"    pm.expect(responseData).to.be.an('object');",
+							"    pm.expect(responseData.id).to.be.a('number');",
+							"    pm.expect(responseData.id).to.be.at.least(0, \"Id should be a non-negative integer\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"Verify that the name is a non-empty string\", function () {",
+							"    const responseData = pm.response.json();",
+							"",
+							"    pm.expect(responseData).to.be.an('object');",
+							"    pm.expect(responseData.name).to.exist.and.to.be.a('string').and.to.have.lengthOf.at.least(1, \"Name should not be empty\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"Verify that gender is either 'male' or 'female'\", function () {",
+							"    const responseData = pm.response.json();",
+							"",
+							"    pm.expect(responseData.gender).to.be.oneOf(['male', 'female']);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Verify status value\", function () {",
+							"    var responseStatus = pm.response.json().status;",
+							"    pm.expect(responseStatus).to.exist.and.to.be.a('string').and.to.have.lengthOf.at.least(1, \"Status should not be empty\");",
+							"});",
+							"",
+							"pm.test(\"Verify that there are 5 keys in the response\", function () {",
+							"    var responseData = pm.response.json();",
+							"    var keys = Object.keys(responseData);",
+							"    pm.expect(keys).to.have.lengthOf(5);",
+							"    pm.expect(keys).to.include.members(['id', 'name', 'email', 'gender', 'status']);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var random = Math.random().toString(36).substring(2);",
+							"var emailAddress = \"tompeter\" + random + \"@gmail.com\";",
+							"pm.environment.set(\"emailAddress\", emailAddress);",
+							"",
+							"var names = [\"John Wick\", \"John Doe\", \"Naveen\",\"Peter Parker\",\"Bill Gates\"];",
+							"var randomName = names[Math.floor(Math.random() * names.length)];",
+							"pm.environment.set(\"randomName\", randomName);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "26512a9bebc190cc38ec74881e30209c88f741ef5077f59915ee5664548ef34c",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"{{randomName}}\",\n    \"gender\":\"male\",\n    \"email\":\"{{emailAddress}}\",\n    \"status\":\"active\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code and response message validation\", function () {",
+							"    if (pm.response.code === 404) {",
+							"        pm.expect(pm.response.json().message).to.equal(\"Resource not found\");",
+							"    } else if (pm.response.code === 200) {",
+							"        pm.response.to.have.status(200);",
+							"        var responseData = pm.response.json();",
+							"        var keys = Object.keys(responseData);",
+							"        pm.expect(keys).to.have.lengthOf(5);",
+							"        pm.expect(keys).to.include.members(['id', 'name', 'email', 'gender', 'status']);",
+							"    } else {",
+							"        // Handle other status codes if necessary",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 5000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});",
+							"",
+							"// pm.test(\"Response size is between 1.2KB and 1024KB\", function () {",
+							"//     var responseSize = pm.response.size();",
+							"//     pm.expect(responseSize).to.be.above(1200);",
+							"//     pm.expect(responseSize).to.be.below(1024 * 1024);",
+							"//     console.log(responseSize);",
+							"// });"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "id",
+						"value": "5145921",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/users/{{postId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"{{postId}}"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "5148156",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update user details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response time is less than 2500ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+							"});",
+							"",
+							"pm.test(\"Status code and response message validation\", function () {",
+							"    if (pm.response.code === 404) {",
+							"        pm.expect(pm.response.json().message).to.equal(\"Resource not found\");",
+							"    } else if (pm.response.code === 200) {",
+							"        pm.response.to.have.status(200);",
+							"    } else {",
+							"        // Handle other status codes if necessary",
+							"    }",
+							"    ",
+							"    // Common checks for response time, etc.",
+							"    pm.expect(pm.response.responseTime).to.be.below(2500);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "26512a9bebc190cc38ec74881e30209c88f741ef5077f59915ee5664548ef34c",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"John Wickey\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/users/{{postId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"{{postId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204 No Content\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});",
+							"",
+							"pm.test(\"Response time is less than 1000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+							"});",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "26512a9bebc190cc38ec74881e30209c88f741ef5077f59915ee5664548ef34c",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/users/{{postId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"{{postId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check if user is deleted",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 Not Found\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test(\"Response message is 'Resource not found'\", function () {",
+							"    pm.expect(pm.response.json().message).to.equal('Resource not found');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "26512a9bebc190cc38ec74881e30209c88f741ef5077f59915ee5664548ef34c",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/users/{{postId}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"{{postId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://gorest.co.in/public/v2/"
+		}
+	]
+}
